@@ -237,108 +237,108 @@ def _progress_step(cur: int, total: int, label: str) -> None:
 
 @register
 def init_robot() -> None:
-    """Stellt die Verbindung zum Roboter her und aktiviert ihn."""
+    """Establishes the connection to the robot and enables it."""
     rbt = SESSION.client
-    progress(5, "Verbinde mit Roboter ...")
+    progress(5, "Connecting to robot ...")
     try:
         # Enable & switch to Auto mode as in control_robotarm.py
         rbt.RobotEnable(1)
-        rbt.Mode(1)  # 0=Jog, 1=Auto, 2=Programm
-        # Optionally set Tool/User, many programs rely on a known frame:
+        rbt.Mode(1)  # 0=Jog, 1=Auto, 2=Program
+        # Optionally set Tool/User; many programs rely on a known frame:
         if hasattr(rbt, "User"):
             rbt.User(DEFAULT_USER)
         if hasattr(rbt, "Tool"):
             rbt.Tool(DEFAULT_TOOL)
         time.sleep(0.5)
-        progress(100, f"Roboter {ROBOT_IP} ist bereit")
+        progress(100, f"Robot {ROBOT_IP} is ready")
     except Exception as e:
         try:
             rbt.RobotEnable(0)
         except Exception:
             pass
-        raise RuntimeError(f"Fehler bei der Initialisierung: {e}") from e
+        raise RuntimeError(f"Initialization failed: {e}") from e
 
 
 @register
 def init_gripper(openingWidth: int = 70) -> None:
-    """Verbindet mit dem Greifer, aktiviert ihn und setzt Start-Öffnung."""
+    """Connects to the gripper, activates it, and sets the start opening."""
     rbt = SESSION.client
     jawnumber = 1
-    progress(10, "Konfiguriere Greifer ...")
+    progress(10, "Configuring gripper ...")
     ret = rbt.SetGripperConfig(GRIPPER_COMPANY, GRIPPER_DEVICE, softversion=0, bus=0)
     time.sleep(1)
-    progress(40, f"Greifer konfiguriert (ret={ret}), aktiviere ...")
+    progress(40, f"Gripper configured (ret={ret}), activating ...")
     err = rbt.ActGripper(jawnumber, 1)
     time.sleep(2)
-    progress(70, f"Greifer aktiviert (err={err}), öffne initial ...")
+    progress(70, f"Gripper activated (err={err}), opening initially ...")
     _ = rbt.MoveGripper(jawnumber, openingWidth, 30, 30, 10000, 0, 0, 0, 0, 0)
-    progress(100, "Greifer bereit")
+    progress(100, "Gripper ready")
 
 
 @register
 def load_teach_points(teach_points_file: str) -> Dict[str, List[float]]:
-    """Lädt die gespeicherten Teach Points aus einer JSON-Datei (roh; unsliced)."""
+    """Loads the stored teach points from a JSON file (raw; unsliced)."""
     pts = _load_teach_points_file(teach_points_file)
-    progress(100, f"{len(pts)} Teach Points geladen")
+    progress(100, f"Loaded {len(pts)} teach points")
     return pts
 
 
 @register
 def open_gripper(openingWidth: int = 50) -> int:
-    """Öffnet den Greifer auf 'openingWidth'."""
+    """Opens the gripper to 'openingWidth'."""
     rbt = SESSION.client
     jawnumber = 1
-    progress(30, f"Öffne Greifer auf {openingWidth}")
+    progress(30, f"Opening gripper to {openingWidth}")
     ret = rbt.MoveGripper(jawnumber, openingWidth, 30, 30, 10000, 0, 0, 0, 0, 0)
-    progress(100, f"Greifer geöffnet (ret={ret})")
+    progress(100, f"Gripper opened (ret={ret})")
     return int(ret)
 
 
 @register
 def close_gripper(openingWidth: int = 85) -> int:
-    """Schließt den Greifer (größere Zahl = enger in Originaldaten)."""
+    """Closes the gripper (larger number = tighter in the original data)."""
     rbt = SESSION.client
     jawnumber = 1
-    progress(30, f"Schließe Greifer auf {openingWidth}")
+    progress(30, f"Closing gripper to {openingWidth}")
     ret = rbt.MoveGripper(jawnumber, openingWidth, 50, 30, 10000, 0, 0, 0, 0, 0)
-    progress(100, f"Greifer geschlossen (ret={ret})")
+    progress(100, f"Gripper closed (ret={ret})")
     return int(ret)
 
 
 @register
 def move_to_point(point_name: str, points: Dict[str, List[float]]) -> bool:
-    """Fährt (MoveJ) zu einem benannten Punkt aus 'points'."""
+    """Moves (MoveJ) to a named point from 'points'."""
     rbt = SESSION.client
     if point_name not in points:
-        raise KeyError(f"Punkt '{point_name}' nicht in Teach Points")
+        raise KeyError(f"Point '{point_name}' not in teach points")
 
     coords = _coerce_joint_slice(points[point_name])
-    progress(20, f"Fahre zu '{point_name}' ...")
+    progress(20, f"Moving to '{point_name}' ...")
     ret = rbt.MoveJ(coords, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=DEFAULT_SPEED)
-    progress(100, f"Punkt '{point_name}' erreicht (ret={ret})")
+    progress(100, f"Point '{point_name}' reached (ret={ret})")
     return True
 
 
 @register
 def move_to_rest_position(speed: int = 30, acceleration: int = 30) -> Optional[int]:
-    """Fährt in eine sichere Ruheposition (beibehält aktuelle J1, feste J2..J6)."""
+    """Moves to a safe rest pose (keeps current J1, fixed J2..J6)."""
     rbt = SESSION.client
     rest_axes = [-39.0, -63.0, -139.0, -158.0, -90.0, 135.0]
     try:
         err, joint_pos_deg = rbt.GetActualJointPosDegree()
         if err != 0 or joint_pos_deg is None:
-            progress(100, f"Joint-Abfragefehler: {err}")
+            progress(100, f"Joint query error: {err}")
             return 1
         # Keep current J1 per original script logic
         rest_axes[0] = float(joint_pos_deg[0])
-        progress(30, "Fahre Ruheposition an ...")
+        progress(30, "Moving to rest pose ...")
         ret = rbt.MoveJ(
             rest_axes, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
         )
-        progress(100, f"Ruheposition erreicht (ret={ret})")
+        progress(100, f"Rest pose reached (ret={ret})")
         return int(ret)
     except Exception as e:
-        raise RuntimeError(f"Fehler bei move_to_rest_position: {e}") from e
+        raise RuntimeError(f"Error in move_to_rest_position: {e}") from e
 
 
 @register
@@ -346,8 +346,8 @@ def move_to_position(
     teach_points_file: str, speed: int = 30, acceleration: int = 30
 ) -> bool:
     """
-    Fährt eine Sequenz von Teach-Points (MoveJ).
-    Spezialfall: erstes Element heißt 'start' -> übernehme J1 in Ruhepose und fahre zuerst dorthin.
+    Moves through a sequence of teach points (MoveJ).
+    Special case: the first element is named 'start' -> copy current J1 into a rest-like pose and go there first.
     """
     rbt = SESSION.client
     points = _load_teach_points_file(teach_points_file)
@@ -355,7 +355,7 @@ def move_to_position(
     # Prepare rest pose with current J1
     err, joint_pos_deg = rbt.GetActualJointPosDegree()
     if err != 0 or joint_pos_deg is None:
-        raise RuntimeError(f"Joint-Abfrage fehlgeschlagen (error={err})")
+        raise RuntimeError(f"Joint query failed (error={err})")
 
     rest_axes = [float(joint_pos_deg[0]), -63.0, -139.0, -158.0, -90.0, 135.0]
 
@@ -363,8 +363,8 @@ def move_to_position(
     for idx, (name, raw) in enumerate(points.items(), start=1):
         coords = _coerce_joint_slice(raw)
         if idx == 1 and name.lower() == "start":
-            # align J1 and go to rest-like pose first
-            progress(10, "Initiale Ausrichtung (start) ...")
+            # Align J1 and go to a rest-like pose first
+            progress(10, "Initial alignment (start) ...")
             _ = rbt.MoveJ(
                 rest_axes,
                 tool=DEFAULT_TOOL,
@@ -373,18 +373,18 @@ def move_to_position(
                 acc=acceleration,
             )
 
-        progress(int(10 + (80 * idx / max(total, 1))), f"Fahre '{name}' ...")
+        progress(int(10 + (80 * idx / max(total, 1))), f"Moving '{name}' ...")
         _ = rbt.MoveJ(
             coords, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
         )
 
-    progress(100, "Sequenz abgeschlossen")
+    progress(100, "Sequence complete")
     return True
 
 
 @register
 def pick_up_item_opentrons(speed: int = 10, acceleration: int = 10) -> bool:
-    """Greifer-sequenz zum Aufnehmen an Opentrons (Datei: working_test_code/pick_opentrons.json)."""
+    """Gripper sequence for picking up at the Opentrons (file: working_test_code/pick_opentrons.json)."""
     rbt = SESSION.client
     points = _load_teach_points_file("working_test_code/pick_opentrons.json")
 
@@ -392,64 +392,64 @@ def pick_up_item_opentrons(speed: int = 10, acceleration: int = 10) -> bool:
         coords = _coerce_joint_slice(raw)
         if idx == 1:
             open_gripper()
-        progress(30 + int(60 * idx / max(len(points), 1)), f"Fahre '{name}' ...")
+        progress(30 + int(60 * idx / max(len(points), 1)), f"Moving '{name}' ...")
         _ = rbt.MoveJ(
             coords, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
         )
         if idx == 2:
             close_gripper()
-    progress(100, "Pickup Opentrons abgeschlossen")
+    progress(100, "Opentrons pickup complete")
     return True
 
 
 @register
 def release_item_opentrons(speed: int = 10, acceleration: int = 10) -> bool:
-    """Greifer-sequenz zum Ablegen an Opentrons (Datei: working_test_code/release_opentrons.json)."""
+    """Gripper sequence for placing at the Opentrons (file: working_test_code/release_opentrons.json)."""
     rbt = SESSION.client
     points = _load_teach_points_file("working_test_code/release_opentrons.json")
 
     for idx, (name, raw) in enumerate(points.items()):
         coords = _coerce_joint_slice(raw)
-        progress(30 + int(60 * idx / max(len(points), 1)), f"Fahre '{name}' ...")
+        progress(30 + int(60 * idx / max(len(points), 1)), f"Moving '{name}' ...")
         _ = rbt.MoveJ(
             coords, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
         )
         if idx == 6:
             open_gripper()
-    progress(100, "Release Opentrons abgeschlossen")
+    progress(100, "Opentrons release complete")
     return True
 
 
 @register
 def get_joint_pos_degree() -> Optional[List[float]]:
-    """Liest aktuelle Gelenkwinkel in Grad."""
+    """Reads current joint angles in degrees."""
     rbt = SESSION.client
     try:
         err, joints = rbt.GetActualJointPosDegree()
         if err == 0:
             return joints
-        print(f"Fehler beim Abrufen der Gelenkinformationen: {err}")
+        print(f"Error retrieving joint information: {err}")
         return None
     except Exception as e:
-        print(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
+        print(f"An unexpected error occurred: {e}")
         return None
 
 
 @register
 def shutdown_robot() -> None:
-    """Trennt die Verbindung zum Roboter."""
+    """Disconnects from the robot."""
     # Try to properly disable; if not possible, still drop session
     try:
         rbt = SESSION.client
         rbt.RobotEnable(0)
-        progress(100, "Roboter heruntergefahren")
+        progress(100, "Robot shut down")
     finally:
         SESSION.shutdown()
 
 
 @register
 def pick_up_pickupstation(speed: int = 10, acceleration: int = 10) -> bool:
-    """Pickup an der Pickupstation (Datei: working_test_code/pick_pickupstation.json)."""
+    """Pickup at the pickup station (file: working_test_code/pick_pickupstation.json)."""
     rbt = SESSION.client
     points = _load_teach_points_file("working_test_code/pick_pickupstation.json")
 
@@ -457,37 +457,37 @@ def pick_up_pickupstation(speed: int = 10, acceleration: int = 10) -> bool:
         coords = _coerce_joint_slice(raw)
         if idx == 1:
             open_gripper()
-        progress(30 + int(60 * idx / max(len(points), 1)), f"Fahre '{name}' ...")
+        progress(30 + int(60 * idx / max(len(points), 1)), f"Moving '{name}' ...")
         _ = rbt.MoveJ(
             coords, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
         )
         if idx == 3:
             close_gripper()
-    progress(100, "Pickup Pickupstation abgeschlossen")
+    progress(100, "Pickup station pickup complete")
     return True
 
 
 @register
 def release_item_microscope(speed: int = 10, acceleration: int = 10) -> bool:
-    """Release am Mikroskop (Datei: working_test_code/release_microscope.json)."""
+    """Release at the microscope (file: working_test_code/release_microscope.json)."""
     rbt = SESSION.client
     points = _load_teach_points_file("working_test_code/release_microscope.json")
 
     for idx, (name, raw) in enumerate(points.items()):
         coords = _coerce_joint_slice(raw)
-        progress(30 + int(60 * idx / max(len(points), 1)), f"Fahre '{name}' ...")
+        progress(30 + int(60 * idx / max(len(points), 1)), f"Moving '{name}' ...")
         _ = rbt.MoveJ(
             coords, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
         )
         if idx == 1:
             open_gripper()
-    progress(100, "Release Mikroskop abgeschlossen")
+    progress(100, "Microscope release complete")
     return True
 
 
 @register
 def pick_up_microscope(speed: int = 10, acceleration: int = 10) -> bool:
-    """Pickup am Mikroskop (Datei: working_test_code/pick_microscope.json)."""
+    """Pickup at the microscope (file: working_test_code/pick_microscope.json)."""
     rbt = SESSION.client
     points = _load_teach_points_file("working_test_code/pick_microscope.json")
 
@@ -495,31 +495,31 @@ def pick_up_microscope(speed: int = 10, acceleration: int = 10) -> bool:
         coords = _coerce_joint_slice(raw)
         if idx in (1, 6):
             open_gripper()
-        progress(30 + int(60 * idx / max(len(points), 1)), f"Fahre '{name}' ...")
+        progress(30 + int(60 * idx / max(len(points), 1)), f"Moving '{name}' ...")
         _ = rbt.MoveJ(
             coords, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
         )
         if idx in (2, 8):
             close_gripper()
-    progress(100, "Pickup Mikroskop abgeschlossen")
+    progress(100, "Microscope pickup complete")
     return True
 
 
 @register
 def release_item_pickupstation(speed: int = 10, acceleration: int = 10) -> bool:
-    """Release an der Pickupstation (Datei: working_test_code/release_pickupstation.json)."""
+    """Release at the pickup station (file: working_test_code/release_pickupstation.json)."""
     rbt = SESSION.client
     points = _load_teach_points_file("working_test_code/release_pickupstation.json")
 
     for idx, (name, raw) in enumerate(points.items()):
         coords = _coerce_joint_slice(raw)
-        progress(30 + int(60 * idx / max(len(points), 1)), f"Fahre '{name}' ...")
+        progress(30 + int(60 * idx / max(len(points), 1)), f"Moving '{name}' ...")
         _ = rbt.MoveJ(
             coords, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
         )
         if idx == 5:
             open_gripper()
-    progress(100, "Release Pickupstation abgeschlossen")
+    progress(100, "Pickup station release complete")
     return True
 
 
@@ -546,7 +546,7 @@ def move_joints(
     ret = rbt.MoveJ(
         joints, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
     )
-    progress(100, f"MoveJ erledigt (ret={ret})")
+    progress(100, f"MoveJ done (ret={ret})")
     return int(ret)
 
 
@@ -570,7 +570,7 @@ def move_linear(
     ret = rbt.MoveL(
         pose, tool=DEFAULT_TOOL, user=DEFAULT_USER, vel=speed, acc=acceleration
     )
-    progress(100, f"MoveL erledigt (ret={ret})")
+    progress(100, f"MoveL done (ret={ret})")
     return int(ret)
 
 
