@@ -244,11 +244,6 @@ def init_robot() -> None:
         # Enable & switch to Auto mode as in control_robotarm.py
         rbt.RobotEnable(1)
         rbt.Mode(1)  # 0=Jog, 1=Auto, 2=Program
-        # Optionally set Tool/User; many programs rely on a known frame:
-        if hasattr(rbt, "User"):
-            rbt.User(DEFAULT_USER)
-        if hasattr(rbt, "Tool"):
-            rbt.Tool(DEFAULT_TOOL)
         time.sleep(0.5)
         progress(100, f"Robot {ROBOT_IP} is ready")
     except Exception as e:
