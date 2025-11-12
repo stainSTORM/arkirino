@@ -587,10 +587,10 @@ def move_slide_to_pickupstation(speed=100, acceleration=100):
     move_to_rest_position(speed=speed, acceleration=acceleration)
 
 @register
-def shutdown_robot():
+def shutdown():
     shutdown_robot()
 
-# @register(
+# @register(s
 #     dependencies=[
 #         pickup_slide_from_pickupstation,
 #         move_slide_to_opentron,
@@ -601,17 +601,20 @@ def shutdown_robot():
 #         shutdown_robot
 #     ]
 # )
-# def complete_sequence_once(speed=100, acceleration=100):
+# @register
+# def complete_sequence_once():
+#     sp=100
+#     acc=100
 #     if not init():
 #         print("Could not start routine. Exiting.")
 #         return
 #     print("Completing sequence once")
-#     pickup_slide_from_pickupstation(speed=speed, acceleration=acceleration)
-#     move_slide_to_opentron(speed=speed, acceleration=acceleration)
-#     pickup_slide_from_opentron(speed=speed, acceleration=acceleration)
-#     move_slide_to_microscope(speed=speed, acceleration=acceleration)
-#     pickup_slide_from_microscope(speed=speed, acceleration=acceleration)
-#     move_slide_to_pickupstation(speed=speed, acceleration=acceleration)
+#     pickup_slide_from_pickupstation(speed=sp, acceleration=acc)
+#     move_slide_to_opentron(speed=sp, acceleration=acc)
+#     pickup_slide_from_opentron(speed=sp, acceleration=acc)
+#     move_slide_to_microscope(speed=sp, acceleration=acc)
+#     pickup_slide_from_microscope(speed=sp, acceleration=acc)
+#     move_slide_to_pickupstation(speed=sp, acceleration=acc)
 #     shutdown_robot()
 
 if __name__ == "__main__":
