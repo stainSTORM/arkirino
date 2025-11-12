@@ -49,9 +49,9 @@ class MockRPC:
         print(f"[MOCK] Tool coordinate system set to {tool}")
         return True
 
-    def MoveJ(self, joints: List[float], tool: int, user: int, vel: int = 30) -> bool:
+    def MoveJ(self, joints: List[float], tool: int, user: int, vel: int = 30, acc: int = 30) -> bool:
         """Move robot to joint position"""
-        print(f"[MOCK] MoveJ: joints={joints}, tool={tool}, user={user}, vel={vel}")
+        print(f"[MOCK] MoveJ: joints={joints}, tool={tool}, user={user}, vel={vel}, acc={acc}")
         self.joint_positions = list(joints)
         time.sleep(0.1)  # Simulate movement time
         return True

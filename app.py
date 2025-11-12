@@ -11,6 +11,7 @@ import threading
 import platform
 from pathlib import Path
 from arkitekt_next import easy, register
+from dotenv import load_dotenv
 
 
 # ------------------------------------------------------------------------------
@@ -101,10 +102,12 @@ def init():
     global IS_INITIALIZED
     if IS_INITIALIZED:
         return
+    print("Start initializing robot and gripper")
     if not init_robot():
         return
     if not init_gripper():
         return
+    print("Robot and gripper initialized")
     IS_INITIALIZED = True
 
 
@@ -222,7 +225,7 @@ def move_to_rest_position(speed: int = 30, acceleration: int = 30):
             if errorMove == 0:
                 print("Arrived at safety position")
             else:
-                print("can't move: {errorMove}")
+                print(f"can't move: {errorMove}")
                 return errorMove
     except Exception as e:
         print(f"An unexpected error occurred during motion: {e}")
@@ -481,14 +484,16 @@ def release_item_pickupstation(speed: int = 10, acceleration: int = 10):
         print(f"Error while moving: {e}")
         return False
 
+@register
+def move_home():
+    init()
+    print("Moving to home position")
+    move_to_rest_position()
+
 
 if __name__ == "__main__":
-    # app_name = os.getenv("ARKITEKT_APPNAME", "FAIRINO")
-    # app_url = os.getenv("ARKITEKT_URL", "go.arkitekt.live")
-    # app = easy(identifier=app_name, 
-    #            url=app_url,
-    #            redeem_token="6c365513-8d86-41c8-bd9f-df33b85e383f")
-    # app.enter()
-    # app.run()
-    init()
-    move_to_rest_position(speed=100, acceleration=100)
+    app_name = os.getenv("ARKITEKT_APPNAME", "art_FAIRINO")
+    app_url = os.getenv("ARKITEKT_URL", "go.arkitekt.live")
+    app = easy(identifier=app_name, url=app_url, redeem_token=os.getenv("REDEEM_TOKEN"))
+    app.enter()
+    app.run()
