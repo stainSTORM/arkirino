@@ -70,7 +70,7 @@ except Exception:
 # ------------------------------------------------------------------------------
 def _resolve_sdk_path() -> Optional[Path]:
     # Allow explicit override for CI/containers: FAIRINO_SDK_DIR=/path/to/fairino/.../fairino
-    env_dir = os.getenv("FAIRINO_SDK_DIR")
+    env_dir = '/home/pi/arkirino/linux/fairino' # os.getenv("FAIRINO_SDK_DIR")
     if env_dir:
         return Path(env_dir)
 
@@ -575,7 +575,10 @@ def move_linear(
 if __name__ == "__main__":
     app_name = os.getenv("ARKITEKT_APPNAME", "FAIRINO")
     app_url = os.getenv("ARKITEKT_URL", "go.arkitekt.live")
-    app = easy(app_name, url=app_url)
+    app = easy(identifier=app_name, 
+               url=app_url
+               redeem_token="6c365513-8d86-41c8-bd9f-df33b85e383f")
+    
     # Decorators already registered; enter + run the app
     app.enter()
     # Prefer to run in foreground by default so exceptions surface
