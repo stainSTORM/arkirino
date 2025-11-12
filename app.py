@@ -98,17 +98,18 @@ IS_INITIALIZED = False
 # ---------------------------------------------------------
 # initialization
 # ---------------------------------------------------------
-def init():
+def init() -> bool:
     global IS_INITIALIZED
     if IS_INITIALIZED:
-        return
+        return True
     print("Start initializing robot and gripper")
     if not init_robot():
-        return
+        return False
     if not init_gripper():
-        return
+        return False
     print("Robot and gripper initialized")
     IS_INITIALIZED = True
+    return True
 
 
 def init_robot():
@@ -148,11 +149,11 @@ def init_gripper(openingWidth: int = 70):
 # ---------------------------------------------------------
 # loading taught points as JSON
 # ---------------------------------------------------------
-def load_teach_points(teach_points_file):
+def load_teach_points(teach_points_file) -> Optional[Dict[str, List[float]]]:
     """Loads the stored teach points from a JSON file."""
     if not os.path.exists(teach_points_file):
         print(f"Error: File '{teach_points_file}' not found.")
-        sys.exit()
+        return None
 
     try:
         with open(teach_points_file, "r") as f:
@@ -161,7 +162,7 @@ def load_teach_points(teach_points_file):
         return points
     except Exception as e:
         print("Error loading teach points:", e)
-        sys.exit()
+        return None
 
 
 # ---------------------------------------------------------
@@ -234,6 +235,8 @@ def move_to_rest_position(speed: int = 30, acceleration: int = 30):
 def move_to_position(teach_points_file, speed: int = 30, acceleration: int = 30):
     # Vorhandene Funktion zum Laden nutzen
     points = load_teach_points(teach_points_file)
+    if points is None:
+        return False
 
     # Ruheposition vorbereiten
     restAxisAngles = [
@@ -277,8 +280,9 @@ def move_to_position(teach_points_file, speed: int = 30, acceleration: int = 30)
 
 
 def pick_up_item_opentrons(speed: int = 10, acceleration: int = 10):
-    points = load_teach_points("working_test_code/pick_opentrons.json")
-
+    points = load_teach_points("./control_points/pick_opentrons.json")
+    if points is None:
+        return False
     try:
         for idx, (point_name, values) in enumerate(points.items()):
             coords = [float(x) for x in values[6:12]]
@@ -308,8 +312,9 @@ def pick_up_item_opentrons(speed: int = 10, acceleration: int = 10):
 
 
 def release_item_opentrons(speed: int = 10, acceleration: int = 10):
-    points = load_teach_points("working_test_code/release_opentrons.json")
-
+    points = load_teach_points("./control_points/release_opentrons.json")
+    if points is None:
+        return False
     try:
         for idx, (point_name, values) in enumerate(points.items()):
             coords = [float(x) for x in values[6:12]]
@@ -362,8 +367,9 @@ def shutdown_robot():
 
 
 def pick_up_pickupstation(speed: int = 10, acceleration: int = 10):
-    points = load_teach_points("working_test_code/pick_pickupstation.json")
-
+    points = load_teach_points("./control_points/pick_pickupstation.json")
+    if points is None:
+        return False
     try:
         for idx, (point_name, values) in enumerate(points.items()):
             coords = [float(x) for x in values[6:12]]
@@ -393,8 +399,9 @@ def pick_up_pickupstation(speed: int = 10, acceleration: int = 10):
 
 
 def release_item_microscope(speed: int = 10, acceleration: int = 10):
-    points = load_teach_points("working_test_code/release_microscope.json")
-
+    points = load_teach_points("./control_points/release_microscope.json")
+    if points is None:
+        return False
     try:
         for idx, (point_name, values) in enumerate(points.items()):
             coords = [float(x) for x in values[6:12]]
@@ -419,8 +426,9 @@ def release_item_microscope(speed: int = 10, acceleration: int = 10):
 
 
 def pick_up_microscope(speed: int = 10, acceleration: int = 10):
-    points = load_teach_points("working_test_code/pick_microscope.json")
-
+    points = load_teach_points("./control_points/pick_microscope.json")
+    if points is None:
+        return False
     try:
         for idx, (point_name, values) in enumerate(points.items()):
             coords = [float(x) for x in values[6:12]]
@@ -460,8 +468,9 @@ def pick_up_microscope(speed: int = 10, acceleration: int = 10):
 
 
 def release_item_pickupstation(speed: int = 10, acceleration: int = 10):
-    points = load_teach_points("working_test_code/release_pickupstation.json")
-
+    points = load_teach_points("./control_points/release_pickupstation.json")
+    if points is None:
+        return False
     try:
         for idx, (point_name, values) in enumerate(points.items()):
             coords = [float(x) for x in values[6:12]]
@@ -486,10 +495,124 @@ def release_item_pickupstation(speed: int = 10, acceleration: int = 10):
 
 @register
 def move_home():
-    init()
+    if not init():
+        print("Could not start routine. Exiting.")
+        return
     print("Moving to home position")
     move_to_rest_position()
 
+@register
+def pickup_slide_from_pickupstation(speed=100, acceleration=100):
+    if not init():
+        print("Could not start routine. Exiting.")
+        return
+    print("Picking up slide from pickup station")
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+    move_to_position(
+        "./control_points/pick_up_station.json", speed=speed, acceleration=acceleration
+    )
+    pick_up_pickupstation(speed=10)
+
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+@register
+def move_slide_to_opentron(speed=100, acceleration=100):
+    if not init():
+        print("Could not start routine. Exiting.")
+        return
+    print("Moving slide to opentron")
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+    move_to_position("./control_points/opentrons.json", speed=speed, acceleration=acceleration)
+    release_item_opentrons()
+
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+
+@register
+def pickup_slide_from_opentron(speed=100, acceleration=100):
+    if not init():
+        print("Could not start routine. Exiting.")
+        return
+    print("Picking up slide from opentron")
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+    move_to_position("./control_points/opentrons.json", speed=100, acceleration=100)
+    pick_up_item_opentrons(speed=10)
+
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+
+@register
+def move_slide_to_microscope(speed=100, acceleration=100):
+    if not init():
+        print("Could not start routine. Exiting.")
+        return
+    print("Moving slide to microscope")
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+    move_to_position("./control_points/microscope.json", speed=100, acceleration=100)
+    release_item_microscope()
+
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+@register
+def pickup_slide_from_microscope(speed=100, acceleration=100):
+    if not init():
+        print("Could not start routine. Exiting.")
+        return
+    print("Picking up slide from microscope")
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+    move_to_position("./control_points/microscope.json", speed=100, acceleration=100)
+    pick_up_microscope()
+
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+
+@register
+def move_slide_to_pickupstation(speed=100, acceleration=100):
+    if not init():
+        print("Could not start routine. Exiting.")
+        return
+    print("Moving slide to pickup station")
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+    move_to_position(
+        "./control_points/pick_up_station.json", speed=100, acceleration=100
+    )
+    release_item_pickupstation()
+
+    move_to_rest_position(speed=speed, acceleration=acceleration)
+
+@register
+def shutdown_robot():
+    shutdown_robot()
+
+# @register(
+#     dependencies=[
+#         pickup_slide_from_pickupstation,
+#         move_slide_to_opentron,
+#         pickup_slide_from_opentron,
+#         move_slide_to_microscope,
+#         pickup_slide_from_microscope,
+#         move_slide_to_pickupstation,
+#         shutdown_robot
+#     ]
+# )
+# def complete_sequence_once(speed=100, acceleration=100):
+#     if not init():
+#         print("Could not start routine. Exiting.")
+#         return
+#     print("Completing sequence once")
+#     pickup_slide_from_pickupstation(speed=speed, acceleration=acceleration)
+#     move_slide_to_opentron(speed=speed, acceleration=acceleration)
+#     pickup_slide_from_opentron(speed=speed, acceleration=acceleration)
+#     move_slide_to_microscope(speed=speed, acceleration=acceleration)
+#     pickup_slide_from_microscope(speed=speed, acceleration=acceleration)
+#     move_slide_to_pickupstation(speed=speed, acceleration=acceleration)
+#     shutdown_robot()
 
 if __name__ == "__main__":
     app_name = os.getenv("ARKITEKT_APPNAME", "art_FAIRINO")
