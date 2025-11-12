@@ -590,32 +590,21 @@ def move_slide_to_pickupstation(speed=100, acceleration=100):
 def shutdown():
     shutdown_robot()
 
-# @register(s
-#     dependencies=[
-#         pickup_slide_from_pickupstation,
-#         move_slide_to_opentron,
-#         pickup_slide_from_opentron,
-#         move_slide_to_microscope,
-#         pickup_slide_from_microscope,
-#         move_slide_to_pickupstation,
-#         shutdown_robot
-#     ]
-# )
-# @register
-# def complete_sequence_once():
-#     sp=100
-#     acc=100
-#     if not init():
-#         print("Could not start routine. Exiting.")
-#         return
-#     print("Completing sequence once")
-#     pickup_slide_from_pickupstation(speed=sp, acceleration=acc)
-#     move_slide_to_opentron(speed=sp, acceleration=acc)
-#     pickup_slide_from_opentron(speed=sp, acceleration=acc)
-#     move_slide_to_microscope(speed=sp, acceleration=acc)
-#     pickup_slide_from_microscope(speed=sp, acceleration=acc)
-#     move_slide_to_pickupstation(speed=sp, acceleration=acc)
-#     shutdown_robot()
+@register
+def complete_sequence_once():
+    sp=100
+    acc=100
+    if not init():
+        print("Could not start routine. Exiting.")
+        return
+    print("Completing sequence once")
+    pickup_slide_from_pickupstation(speed=sp, acceleration=acc)
+    move_slide_to_opentron(speed=sp, acceleration=acc)
+    pickup_slide_from_opentron(speed=sp, acceleration=acc)
+    move_slide_to_microscope(speed=sp, acceleration=acc)
+    pickup_slide_from_microscope(speed=sp, acceleration=acc)
+    move_slide_to_pickupstation(speed=sp, acceleration=acc)
+    shutdown_robot()
 
 if __name__ == "__main__":
     app_name = os.getenv("ARKITEKT_APPNAME", "art_FAIRINO")
