@@ -36,6 +36,8 @@ def _resolve_sdk_path() -> Optional[Path]:
 
 RPC = None  # will be assigned below
 
+load_dotenv()
+
 sdk_path = _resolve_sdk_path()
 if sdk_path and sdk_path.exists():
     sys.path.append(str(sdk_path))
@@ -117,6 +119,7 @@ def init_robot():
     time.sleep(0.5)
     try:
         print(f"Connected to robot {ROBOT_IP}")
+        print(f"Robot object: {rbt}")
         rbt.RobotEnable(1)
         rbt.Mode(1)  # 0 = Jog, 1 = Auto, 2 = Program
         print("Robot is ready.")
@@ -607,7 +610,10 @@ def complete_sequence_once():
     shutdown_robot()
 
 if __name__ == "__main__":
-    app_name = os.getenv("ARKITEKT_APPNAME", "art_FAIRINO")
+    app_name = os.getenv("ARKITEKT_APPNAME", "")
+    if app_name == "":
+        print("ARKITEKT_APPNAME is not set. Please set the ARKITEKT_APPNAME environment variable. For example put it in .env file.")
+        exit(1)
     app_url = os.getenv("ARKITEKT_URL", "go.arkitekt.live")
     app = easy(identifier=app_name, url=app_url, redeem_token=os.getenv("REDEEM_TOKEN"))
     app.enter()
