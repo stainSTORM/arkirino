@@ -11,8 +11,11 @@ import threading
 import platform
 from pathlib import Path
 from arkitekt_next import easy, register
+from rekuest_next.actors.sync import SyncGroup
 from dotenv import load_dotenv
 
+
+global_sync = SyncGroup("robot_sync")
 
 # ------------------------------------------------------------------------------
 # Fairino SDK import (Windows/Linux) with optional FAIRINO_SDK_DIR override
@@ -496,7 +499,7 @@ def release_item_pickupstation(speed: int = 10, acceleration: int = 10):
         print(f"Error while moving: {e}")
         return False
 
-@register
+@register(sync=global_sync)
 def move_home():
     if not init():
         print("Could not start routine. Exiting.")
@@ -504,7 +507,7 @@ def move_home():
     print("Moving to home position")
     move_to_rest_position()
 
-@register
+@register(sync=global_sync)
 def pickup_slide_from_pickupstation(speed=100, acceleration=100):
     if not init():
         print("Could not start routine. Exiting.")
@@ -519,7 +522,7 @@ def pickup_slide_from_pickupstation(speed=100, acceleration=100):
 
     move_to_rest_position(speed=speed, acceleration=acceleration)
 
-@register
+@register(sync=global_sync)
 def move_slide_to_opentron(speed=100, acceleration=100):
     if not init():
         print("Could not start routine. Exiting.")
@@ -533,7 +536,7 @@ def move_slide_to_opentron(speed=100, acceleration=100):
     move_to_rest_position(speed=speed, acceleration=acceleration)
 
 
-@register
+@register(sync=global_sync)
 def pickup_slide_from_opentron(speed=100, acceleration=100):
     if not init():
         print("Could not start routine. Exiting.")
@@ -547,7 +550,7 @@ def pickup_slide_from_opentron(speed=100, acceleration=100):
     move_to_rest_position(speed=speed, acceleration=acceleration)
 
 
-@register
+@register(sync=global_sync)
 def move_slide_to_microscope(speed=100, acceleration=100):
     if not init():
         print("Could not start routine. Exiting.")
@@ -560,7 +563,7 @@ def move_slide_to_microscope(speed=100, acceleration=100):
 
     move_to_rest_position(speed=speed, acceleration=acceleration)
 
-@register
+@register(sync=global_sync)
 def pickup_slide_from_microscope(speed=100, acceleration=100):
     if not init():
         print("Could not start routine. Exiting.")
@@ -574,7 +577,7 @@ def pickup_slide_from_microscope(speed=100, acceleration=100):
     move_to_rest_position(speed=speed, acceleration=acceleration)
 
 
-@register
+@register(sync=global_sync)
 def move_slide_to_pickupstation(speed=100, acceleration=100):
     if not init():
         print("Could not start routine. Exiting.")
@@ -589,11 +592,11 @@ def move_slide_to_pickupstation(speed=100, acceleration=100):
 
     move_to_rest_position(speed=speed, acceleration=acceleration)
 
-@register
+@register(sync=global_sync)
 def shutdown():
     shutdown_robot()
 
-@register
+@register(sync=global_sync)
 def complete_sequence_once():
     sp=100
     acc=100
