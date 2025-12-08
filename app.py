@@ -613,7 +613,7 @@ def complete_sequence_once():
     shutdown_robot()
 
 if __name__ == "__main__":
-    app_name = os.getenv("ARKITEKT_APPNAME", "")
+    app_name = os.getenv("ARKITEKT_APPNAME", "arkirino")
     if app_name == "":
         print("ARKITEKT_APPNAME is not set. Please set the ARKITEKT_APPNAME environment variable. For example put it in .env file.")
         exit(1)
