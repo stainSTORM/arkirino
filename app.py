@@ -136,7 +136,7 @@ def init_robot():
     return True
 
 
-def init_gripper(openingWidth: int = 70):
+def init_gripper(openingWidth: int = 95):
     """Connects to the gripper and activates it."""
     try:
         jawnumber = 1
