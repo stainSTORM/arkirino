@@ -341,9 +341,11 @@ def get_joint_pos_degree():
 
 def shutdown_robot():
     """Disconnects from the robot."""
+    global IS_INITIALIZED
     try:
         rbt.RobotEnable(0)
         print("Robot shut down.")
+        IS_INITIALIZED = False
     except:
         print("Error disconnecting.")
 
