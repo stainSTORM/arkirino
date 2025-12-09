@@ -22,7 +22,9 @@ global_sync = SyncGroup("robot_sync")
 # ------------------------------------------------------------------------------
 def _resolve_sdk_path() -> Optional[Path]:
     # Allow explicit override for CI/containers: FAIRINO_SDK_DIR=/path/to/fairino/.../fairino
-    env_dir = os.getenv("FAIRINO_SDK_DIR", "")  # /home/pi/arkirino/linux/fairino
+    env_dir = os.getenv(
+        "FAIRINO_SDK_DIR", "/home/pi/arkirino/fairino-python-sdk/fairino"
+    )  # /home/pi/arkirino/linux/fairino
     if env_dir:
         return Path(env_dir)
 
@@ -504,7 +506,6 @@ def release_item_pickupstation(
     except Exception as e:
         print(f"Error while moving: {e}")
         return False
-
 
 
 @register(sync=global_sync)
