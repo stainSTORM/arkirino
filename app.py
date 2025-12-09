@@ -42,6 +42,7 @@ RPC = None  # will be assigned below
 load_dotenv()
 
 sdk_path = _resolve_sdk_path()
+print(f"SDK path: {sdk_path}")
 if sdk_path and sdk_path.exists():
     sys.path.append(str(sdk_path))
     try:
