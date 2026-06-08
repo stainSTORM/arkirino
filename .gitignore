@@ -5,9 +5,11 @@ build/
 dist/
 wheels/
 *.egg-info
+*/.idea
 
 # Virtual environments
 .venv
 .env
 
 old/
+*.DS_Store
